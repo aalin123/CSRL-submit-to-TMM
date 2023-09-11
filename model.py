@@ -1,7 +1,13 @@
 import torch
 import torch.nn as nn
+#import torchvision.models as models
 import torch.nn.functional as F
-from attention1 import *  
+#import numpy as np
+#import scipy.sparse as sp
+from attention1 import *  #CBAM, MR_CBAM#, MR_CBAM_d
+#from SK_attention import SKAttention
+#from torch.nn.functional import normalize, pad,avg_pool2d,avg_pool3d #import torch.nn.functional as F
+#from SK_attention_org import SKAttention
 import torch.utils.model_zoo as model_zoo
 
 from CrossdomainTrans import *
@@ -225,7 +231,7 @@ class TransNet(nn.Module):
         
         pred = self.cls_fc(source1)
 
-        return pred, source2, target 
+        return pred, source2, target #s_fea, t_fea # source, target #loss source target
 
 class TransNet_Dual(nn.Module):
 
@@ -233,8 +239,8 @@ class TransNet_Dual(nn.Module):
         super(TransNet_Dual, self).__init__()
         self.sharedNet = ShareResNet(args)
         self.cls_fc = nn.Linear(512, args.class_num)
-        self.encoder_layers = STransformerEncoderLayer(512,2,512,0.5)
-        self.STencoder_layers = CrossTransformerEncoderLayer(512,2,512,0.5)
+        self.encoder_layers = STransformerEncoderLayer(512,2,512,0.5)#(512,1,2048,0.2)#(512, 1, 2048, 0.2) # 62.44 2
+        self.STencoder_layers = CrossTransformerEncoderLayer(512,2,512,0.5)#(512,1,2048,0.2)#(512, 1, 2048, 0.2)
         # self.Tencoder_layers = STransformerEncoderLayer(512, 4, 512, 0.5)
         # self.TSencoder_layers = CrossTransformerEncoderLayer(512, 2, 512, 0.5)
         # bottleneck_list1 = [nn.Linear(512, 256), nn.BatchNorm1d(256), nn.ReLU(), nn.Dropout(0.5)]#,
@@ -245,10 +251,10 @@ class TransNet_Dual(nn.Module):
     
     def forward(self, source, target, Trag):
         source1 = self.sharedNet(source) #32x512
-        source = source1 
+        source = source1 #self.bottleneck_layer(source1) #
         if self.training == True:
             target1 = self.sharedNet(target)
-            target = target1
+            target = target1#self.bottleneck_layer(target1) #target1#
             SSource = source1.unsqueeze(1) 
             TTarget = target1.unsqueeze(1)  
             SSource1 = self.encoder_layers(SSource).squeeze(1)
@@ -257,8 +263,8 @@ class TransNet_Dual(nn.Module):
             source1=torch.cat((source1,Transfea),0)
             if Trag==True:
                 source1=torch.cat((source1,target1),0)
-                TTarget1 =self.encoder_layers(TTarget).squeeze(1)
-                TSarget = self.STencoder_layers(TTarget,SSource).squeeze(1)
+                TTarget1 =self.encoder_layers(TTarget).squeeze(1)#self.Tencoder_layers(TTarget).squeeze(1)
+                TSarget = self.STencoder_layers(TTarget,SSource).squeeze(1)#self.TSencoder_layers(TTarget,SSource).squeeze(1)
                 transfeaTS=torch.cat((TTarget1,TSarget),0)
                 source1=torch.cat((source1,transfeaTS),0)
                 
@@ -272,7 +278,7 @@ def ShareResNet(args):
                   'resnet50': 'https://download.pytorch.org/models/resnet50-19c8e357.pth',}
 
     if  args.Backbone == 'ResNet18':
-        model = ResNet(block_b=BasicBlock, block_a=Attentiongabol, layers=[2, 2, 2, 2])
+        model = ResNet(block_b=BasicBlock, block_a=BasicBlock, layers=[2, 2, 2, 2])
     elif args.Backbone == 'ResNet50':
         model = ResNet(block_b=Bottleneck, block_a=Bottleneck, layers=[3, 4, 6, 3])
     if args.Resume_Model != 'None':
