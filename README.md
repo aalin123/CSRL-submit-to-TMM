@@ -1,6 +1,7 @@
 # Cross-domain Sample Relationship Learning for Facial Expression Recognition
  Dongliang Chen, Guihua Wen, Pengcheng Wen, Pei Yang, Rui Chen, Cheng Li
-
+##
+![Pipeline](Framework2.png)
 ## Environment
 
 Python 3.6.13 and PyTorch 1.9.1
